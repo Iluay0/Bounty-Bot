@@ -42,18 +42,17 @@ public:
 			{
 				const dpp::slashcommand_t& slashCommand = dynamic_cast<const dpp::slashcommand_t&>(event);
 
-				const dpp::channel& thread = bot.channel_get_sync(slashCommand.command.channel_id);
+				dpp::channel thread = bot.channel_get_sync(slashCommand.command.channel_id);
 				if (!thread.name.starts_with("[Unsolved]"))
 				{
 					slashCommand.reply(dpp::message("This channel is not a bounty, or it is already completed.").set_flags(dpp::m_ephemeral));
 					return;
 				}
 
-				dpp::channel newThread = thread;
-				util::replace(newThread.name, "[Unsolved]", "[Solved]");
-				bot.channel_edit(newThread);
+				util::replace(thread.name, "[Unsolved]", "[Solved]");
+				bot.channel_edit(thread);
 
-				std::string solvedMessage = "## " + newThread.name;
+				std::string solvedMessage = "## " + thread.name;
 				solvedMessage += "\nLink: " + thread.get_url();
 
 				dpp::message message(util::env["channelIdSolvedBounties"].get<uint64_t>(), solvedMessage);
