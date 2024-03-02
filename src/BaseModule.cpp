@@ -11,10 +11,12 @@ BaseModule::~BaseModule()
 {
 }
 
-void BaseModule::addCommand(EventType eventType, std::string name, std::function<void(dpp::cluster& bot, const dpp::event_dispatch_t&)> func, std::string description)
+void BaseModule::addCommand(EventType eventType, std::string name, std::function<void(dpp::cluster& bot, const dpp::event_dispatch_t&)> func, const std::vector<Command> options, std::string description)
 {
-	name = getFullName() + "-" + name;
-	m_commands[name] = Command(eventType, name, description, func);
+	std::string fullName = getFullName();
+	if (!fullName.empty())
+		name = fullName + "-" + name;
+	m_commands[name] = Command(eventType, name, description, options, func);
 }
 
 void BaseModule::addModule(std::shared_ptr<BaseModule> module, BaseModule* parentModule)

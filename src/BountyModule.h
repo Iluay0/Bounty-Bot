@@ -21,6 +21,13 @@ public:
 			{
 				const dpp::slashcommand_t& slashCommand = dynamic_cast<const dpp::slashcommand_t&>(event);
 
+				std::string guildId = std::to_string(slashCommand.command.guild_id);
+				if (!util::env.contains(guildId) || !util::env[guildId].contains("channelIdBounties"))
+				{
+					slashCommand.reply(dpp::message("Environment does not include channelIdBounties for this guild.").set_flags(dpp::m_ephemeral));
+					return;
+				}
+
 				dpp::interaction_modal_response modal(getFullName() + "-modal-create", "Create a bounty");
 
 				modal.add_component(
@@ -35,12 +42,19 @@ public:
 				);
 
 				slashCommand.dialog(modal);
-			}, "Creates a bounty.");
+			}, {}, "Creates a bounty.");
 
 		addCommand(EventType::SlashCommand, "solve",
 			[&](dpp::cluster& bot, const dpp::event_dispatch_t& event)
 			{
 				const dpp::slashcommand_t& slashCommand = dynamic_cast<const dpp::slashcommand_t&>(event);
+
+				std::string guildId = std::to_string(slashCommand.command.guild_id);
+				if (!util::env.contains(guildId) || !util::env[guildId].contains("channelIdSolvedBounties"))
+				{
+					slashCommand.reply(dpp::message("Environment does not include channelIdSolvedBounties for this guild.").set_flags(dpp::m_ephemeral));
+					return;
+				}
 
 				dpp::channel thread = bot.channel_get_sync(slashCommand.command.channel_id);
 				if (!thread.name.starts_with("[Unsolved]"))
@@ -55,24 +69,25 @@ public:
 				std::string solvedMessage = "## " + thread.name;
 				solvedMessage += "\nLink: " + thread.get_url();
 
-				dpp::message message(util::env["channelIdSolvedBounties"].get<uint64_t>(), solvedMessage);
+				dpp::message message(util::env[guildId]["channelIdSolvedBounties"].get<uint64_t>(), solvedMessage);
 				bot.message_create(message);
 
 				slashCommand.reply(dpp::message("Bounty successfully solved.").set_flags(dpp::m_ephemeral));
 
-			}, "Solves a bounty. Must be used in a bounty thread.");
+			}, {}, "Solves a bounty. Must be used in a bounty thread.");
 
 		addCommand(EventType::FormSubmit, "modal-create",
 			[&](dpp::cluster& bot, const dpp::event_dispatch_t& event)
 			{
 				const dpp::form_submit_t& formSubmit = dynamic_cast<const dpp::form_submit_t&>(event);
+				std::string guildId = std::to_string(formSubmit.command.guild_id);
 
 				const dpp::component& name = util::getFormComponent(formSubmit, "bounty-name");
 				std::string bountyName = "[Unsolved] " + std::get<std::string>(name.value);
 
 				dpp::thread thread;
 				bot.thread_create(bountyName,
-					util::env["channelIdBounties"].get<uint64_t>(),
+					util::env[guildId]["channelIdBounties"].get<uint64_t>(),
 					10080,
 					dpp::channel_type::CHANNEL_PUBLIC_THREAD,
 					false,

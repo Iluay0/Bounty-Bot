@@ -44,7 +44,14 @@ void setupEvents(dpp::cluster& bot)
 			{
 				for (const auto& command : m_MainModule->getAllSlashCommands())
 				{
-					bot.global_command_create(dpp::slashcommand(command.name, command.description, bot.me.id));
+					dpp::slashcommand slashCommand(command.name, command.description, bot.me.id);
+
+					for (const auto& subCommand : command.options)
+					{
+						slashCommand.add_option(dpp::command_option(subCommand.optionType, subCommand.name, subCommand.description, false));
+					}
+
+					bot.global_command_create(slashCommand);
 				}
 			}
 
@@ -57,6 +64,7 @@ void setupEvents(dpp::cluster& bot)
 int main()
 {
 	m_MainModule = std::shared_ptr<MainModule>(new MainModule());
+	m_MainModule->bindCommands();
 	m_MainModule->createChildModules();
 
 	try
