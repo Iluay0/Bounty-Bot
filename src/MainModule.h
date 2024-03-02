@@ -29,6 +29,15 @@ public:
 				dpp::command_interaction cmdData = slashCommand.command.get_command_interaction();
 				std::string guildId = std::to_string(slashCommand.command.guild_id);
 
+				dpp::guild guild = slashCommand.command.get_guild();
+				dpp::channel channel = bot.channel_get_sync(slashCommand.command.channel_id);
+				auto permissions = guild.permission_overwrites(slashCommand.command.member, channel);
+				if (!permissions.can(dpp::p_administrator))
+				{
+					slashCommand.reply(dpp::message("You are not allowed to use this command.").set_flags(dpp::m_ephemeral));
+					return;
+				}
+
 				bool set = false;
 				for (auto& subcommand : cmdData.options)
 				{
